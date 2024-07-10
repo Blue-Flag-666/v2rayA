@@ -83,7 +83,7 @@ jobs:
           go build -o ../v2raya_binaries/v2raya_${filename}_${env:VERSION} -ldflags="-X github.com/v2rayA/v2rayA/conf.Version=${env:VERSION} -s -w" -trimpath
           Set-Location -Path ..
         }
-        foreach ($arm in @('7')) {
+        foreach ($arm in @('6', '7')) {
           $env:GOARCH = 'arm'
           $env:GOARM = $arm
           $filename = $((Get-Content ./install/friendly-filenames.json | ConvertFrom-Json)."linux-arm$arm")."friendlyName"
@@ -283,6 +283,9 @@ jobs:
         include:
           - goos: linux
             goarch: arm
+            goarm: 6
+          - goos: linux
+            goarch: arm
             goarm: 7
     env:
       GOOS: ${{ matrix.goos }}
@@ -361,7 +364,9 @@ jobs:
               package_arch="$GOARCH"
             fi
           elif [ "$package_manager" == 'deb' ];then
-            if [ "$GOARCH" == 'arm' ] && [ "$GOARM" == '7' ];then
+            if [ "$GOARCH" == 'arm' ] && [ "$GOARM" == '6' ];then
+              package_arch='armhf'
+            elif [ "$GOARCH" == 'arm' ] && [ "$GOARM" == '7' ];then
               package_arch='armhf'
             elif [ "$GOARCH" == '386' ];then
               package_arch='i386'
@@ -492,7 +497,7 @@ jobs:
       run: |
         mkdir xray_unzipped
         mkdir v2ray_unzipped
-        for arch in 64 32 arm64-v8a arm32-v7a mips32 mips32le mips64 mips64le riscv64 loong64; do
+        for arch in 64 32 arm64-v8a arm32-v7a arm32-v6 mips32 mips32le mips64 mips64le riscv64 loong64; do
           wget -q https://github.com/v2fly/v2ray-core/releases/download/$V2RAY_VERSION/v2ray-linux-$arch.zip
           unzip -q v2ray-linux-$arch.zip -d v2ray_unzipped/v2ray-linux-$arch
           wget -q https://github.com/XTLS/xray-core/releases/download/$XRAY_VERSION/Xray-linux-$arch.zip
@@ -502,7 +507,7 @@ jobs:
       run: |
         mkdir v2ray_packages
         package_version="$(echo "$V2RAY_VERSION" | sed 's/v//g')" # Remove the leading 'v' in version number
-        for arch in amd64 i386 arm64 armhf mips mips32le mips64 mips64le riscv64 loong64; do
+        for arch in amd64 i386 arm64 armhf32 mips mips32le mips64 mips64le riscv64 loong64; do
         case $arch in
           amd64)
             source_dir="v2ray_unzipped/v2ray-linux-64"
@@ -515,6 +520,9 @@ jobs:
             ;;
           armhf)
             source_dir="v2ray_unzipped/v2ray-linux-arm32-v7a"
+            ;;
+          arm32)
+            source_dir="v2ray_unzipped/v2ray-linux-arm32-v6"
             ;;
           mips)
             source_dir="v2ray_unzipped/v2ray-linux-mips32"
@@ -561,7 +569,7 @@ jobs:
       run: |
         mkdir xray_packages
         package_version="$(echo "$XRAY_VERSION" | sed 's/v//g')" # Remove the leading 'v' in version number
-        for arch in amd64 i386 arm64 armhf mips mips32le mips64 mips64le riscv64 loong64; do
+        for arch in amd64 i386 arm64 armhf arm32 mips mips32le mips64 mips64le riscv64 loong64; do
         case $arch in
           amd64)
             source_dir="xray_unzipped/xray-linux-64"
@@ -574,6 +582,9 @@ jobs:
             ;;
           armhf)
             source_dir="xray_unzipped/xray-linux-arm32-v7a"
+            ;;
+          arm32)
+            source_dir="xray_unzipped/xray-linux-arm32-v6"
             ;;
           mips)
             source_dir="xray_unzipped/xray-linux-mips32"
